@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Bullshitter Simulation</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e2e;
+            --glass-bg: rgba(30, 30, 46, 0.5);
+            --text-primary: #ffffff;
+            --text-secondary: #b3b3b3;
+            --accent-green: #4CAF50;
+            --accent-red: #f44336;
+            --accent-blue: #2196F3;
+            --gradient-start: #2E0B36;
+            --gradient-end: #1A1E33;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Glassmorphic card effect */
+        .card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            padding: 25px;
+            margin: 15px 0;
+            width: 100%;
+            max-width: 800px;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            background: linear-gradient(to right, var(--accent-green), var(--accent-blue));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin: 30px 0px;
+            text-align: center;
+            display: block;
+            width: 100%;
+        }
+        .lang-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-grid {
+            display: grid;
+            grid-template-columns: 50% 50%;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            align-items: center;
+        }
+
+        /* Customize specific input groups */
+        .input-group.long-label .input-label {
+            flex: 3; /* More space for labels */
+        }
+
+        .input-group.long-label input {
+            flex: 1; /* Less space for inputs */
+        }
+
+        .input-group.long-input .input-label {
+            flex: 1; /* Less space for labels */
+        }
+
+        .input-group.long-input input {
+            flex: 3; /* More space for inputs */
+        }
+
+        .input-label {
+            margin-right: 10px;
+            flex: 1;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            margin-top: 10px;
+            margin-left: -2px;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            align-items: center;
+            border: 0;
+            border-radius: 8px;
+            box-shadow: rgba(151, 65, 252, 0.2) 0 15px 30px -5px;
+            box-sizing: border-box;
+            color: #ffffff;
+            display: flex;
+            font-size: 18px;
+            justify-content: center;
+            line-height: 1em;
+            min-width: 140px;
+            padding: 2px;
+            text-decoration: none;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-image: linear-gradient(144deg, rgba(175, 64, 255, 0.5), rgba(91, 66, 243, 0.5) 50%, rgba(0, 221, 235, 0.5));
+        
+        }
+
+        .btn:active,
+        .btn:hover {
+            outline: 0;
+        }
+
+        .btn span {
+            background-color: #1a1528;
+            padding: 16px 24px;
+            border-radius: 6px;
+            width: 100%;
+            height: 100%;
+            transition: 300ms;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:hover span {
+            background: none;
+        }
+
+        .btn:active {
+            transform: scale(0.9);
+        }
+
+        .btn-primary {
+            background-image: linear-gradient(144deg, #207f24, #46bd4d 50%, #0f4513);
+        }
+
+        .btn-secondary {
+            background-image: linear-gradient(144deg, #2a699a, #1976D2 50%, #133264);
+        }
+
+        .btn-danger {
+            background-image: linear-gradient(144deg, #8a3f3a, #D32F2F 50%, #651919);
+        }
+
+        .btn-lang {
+            min-width: auto;
+            max-height: 40px;
+            background-image: linear-gradient(144deg, #221534, #3f354e 50%, #211633);
+        }
+
+        .btn-lang.active {
+            background-image: linear-gradient(144deg, #231434, #4f3379 50%, #211734);
+        }
+
+        .progress-container {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin: 60px 0;
+            overflow: hidden;
+            height: 10px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(to right, var(--accent-green), var(--accent-blue));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .stats {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: var(--accent-blue);
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Glassmorphic effect for inputs and buttons */
+        .btn, input[type="number"] {
+            backdrop-filter: blur(10px);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .input-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-container {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 class="title" id="appTitle">Symulator Testów</h1>
+        
+        <div class="lang-buttons">
+            <button class="btn btn-lang active" id="pl-btn" onclick="changeLanguage('PL')"><span>🇵🇱 PL</span></button>
+            <button class="btn btn-lang" id="eng-btn" onclick="changeLanguage('ENG')"><span>🇬🇧 ENG</span></button>
+        </div>
+    </div>
+    <div><h2 class="subtitle" id="appSubtitle">Symulator losowego odgadywania: Oblicz swoje szanse na zdanie egzaminu poprzez zgadywanie w ciemno</h2></div>
+
+    <div class="card">
+        <div class="input-grid">
+            <div class="input-group long-label">
+                <label class="input-label" id="label-questions">Liczba pytań:</label>
+                <input type="number" id="num-questions" value="10" min="1">
+            </div>
+            <div class="input-group long-input">
+                <label class="input-label" id="label-answers">Liczba odpowiedzi:</label>
+                <input type="number" id="num-answers" value="4" min="1">
+            </div>
+            <div class="input-group long-label">
+                <label class="input-label" id="label-correct">Liczba poprawnych:</label>
+                <input type="number" id="num-correct" value="1" min="1">
+            </div>
+            <div class="input-group long-input">
+                <label class="input-label" id="label-simulations">Liczba symulacji:</label>
+                <input type="number" id="num-simulations" value="100" min="1">
+            </div>
+            <div class="input-group long-label">
+                <label class="input-label" id="label-min-pass">Minimum do zaliczenia:</label>
+                <input type="number" id="min-to-pass" value="6" min="1">
+            </div>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" id="start-btn" onclick="startSimulation()"><span>Start</span></button>
+            <button class="btn btn-danger" id="clear-btn" onclick="clearAll()"><span>Wyczyść</span></button>
+            <button class="btn btn-secondary" id="save-btn" onclick="savePlot()"><span>Zapisz wykres</span></button>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-bar" id="progress"></div>
+        </div>
+
+        <div class="stats">
+            <p id="avg-label">Średnia: -</p>
+            <p id="median-label">Mediana: -</p>
+            <p id="pass-chance-label">Szansa na zaliczenie: -</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="chart-container">
+            <canvas id="resultsChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const translations = {
+            'PL': {
+                'title': 'Symulator Strzelania Na Egzaminie',
+                'subtitle': 'Oblicz swoje szanse na zaliczenie zgadując w ciemno',
+                'num_questions': 'Liczba pytań:',
+                'num_answers': 'Liczba odpowiedzi do wyboru w pytaniu:',
+                'num_correct': 'Liczba poprawnych odp. w pytaniu:',
+                'num_simulations': 'Liczba symulacji:',
+                'min_to_pass': 'Minimum zal. pyt. do zaliczenia egzaminu:',
+                'start': 'Start',
+                'clear': 'Wyczyść',
+                'save_plot': 'Zapisz wykres',
+                'average': 'Średnia:',
+                'median': 'Mediana:',
+                'pass_chance': 'Szansa na zaliczenie:',
+                'error': 'Błąd',
+                'warning': 'Ostrzeżenie',
+                'success': 'Sukces',
+                'invalid_input': 'Nieprawidłowe dane wejściowe!',
+                'run_first': 'Najpierw wykonaj symulację!',
+                'plot_saved': "Wykres został zapisany jako 'wyniki_symulacji.png'",
+                'plot_title': 'Wyniki Symulacji',
+                'plot_x_label': 'Numer symulacji',
+                'plot_y_label': 'Liczba poprawnych odpowiedzi'
+            },
+            'ENG': {
+                'title': 'Random Bullshitter Simulation',
+                'subtitle': 'Calculate your chances of passing an exam by blind guessing',
+                'num_questions': 'Number of questions:',
+                'num_answers': 'Number of given answers per question:',
+                'num_correct': 'Number of correct answers per question:',
+                'num_simulations': 'Number of simulations:',
+                'min_to_pass': 'Minimum correctly answered questions to pass:',
+                'start': 'Start',
+                'clear': 'Clear',
+                'save_plot': 'Save Plot',
+                'average': 'Average:',
+                'median': 'Median:',
+                'pass_chance': 'Pass chance:',
+                'error': 'Error',
+                'warning': 'Warning',
+                'success': 'Success',
+                'invalid_input': 'Invalid input data!',
+                'run_first': 'Run simulation first!',
+                'plot_saved': "Plot has been saved as 'simulation_results.png'",
+                'plot_title': 'Simulation Results',
+                'plot_x_label': 'Simulation number',
+                'plot_y_label': 'Number of correct answers'
+            }
+        };
+
+        let currentLanguage = 'PL';
+        let chart = null;
+        let simulationResults = [];
+
+        // Change language function
+        function changeLanguage(lang) {
+            currentLanguage = lang;
+            document.getElementById('appTitle').textContent = translations[lang].title;
+            document.getElementById('appSubtitle').textContent = translations[lang].subtitle;
+            document.getElementById('label-questions').textContent = translations[lang].num_questions;
+            document.getElementById('label-answers').textContent = translations[lang].num_answers;
+            document.getElementById('label-correct').textContent = translations[lang].num_correct;
+            document.getElementById('label-simulations').textContent = translations[lang].num_simulations;
+            document.getElementById('label-min-pass').textContent = translations[lang].min_to_pass;
+            
+            document.getElementById('start-btn').querySelector('span').textContent = translations[lang].start;
+            document.getElementById('clear-btn').querySelector('span').textContent = translations[lang].clear;
+            document.getElementById('save-btn').querySelector('span').textContent = translations[lang].save_plot;
+            
+            updateStatLabels();
+            
+            // Update language buttons
+            document.getElementById('pl-btn').classList.toggle('active', lang === 'PL');
+            document.getElementById('eng-btn').classList.toggle('active', lang === 'ENG');
+            
+            // Update chart if it exists
+            if (chart && simulationResults.length > 0) {
+                updateChart(simulationResults);
+            }
+        }
+
+        // Update statistics labels
+        function updateStatLabels() {
+            document.getElementById('avg-label').textContent = `${translations[currentLanguage].average} -`;
+            document.getElementById('median-label').textContent = `${translations[currentLanguage].median} -`;
+            document.getElementById('pass-chance-label').textContent = `${translations[currentLanguage].pass_chance} -`;
+        }
+
+        // Simulate a single test
+        function simulateTest(numQuestions, numAnswers, numCorrect) {
+            let correct = 0;
+            for (let i = 0; i < numQuestions; i++) {
+                const p = numCorrect / numAnswers;
+                if (Math.random() < p) {
+                    correct++;
+                }
+            }
+            return correct;
+        }
+
+        // Calculate median
+        function median(values) {
+            if (values.length === 0) return 0;
+            
+            values.sort((a, b) => a - b);
+            const half = Math.floor(values.length / 2);
+            
+            if (values.length % 2) {
+                return values[half];
+            }
+            return (values[half - 1] + values[half]) / 2.0;
+        }
+
+        // Start simulation function
+        async function startSimulation() {
+            // Get input values
+            const numQuestions = parseInt(document.getElementById('num-questions').value);
+            const numAnswers = parseInt(document.getElementById('num-answers').value);
+            const numCorrect = parseInt(document.getElementById('num-correct').value);
+            const numSimulations = parseInt(document.getElementById('num-simulations').value);
+            const minToPass = parseInt(document.getElementById('min-to-pass').value);
+            
+            // Validate input
+            if (numCorrect > numAnswers || 
+                numQuestions <= 0 || 
+                numAnswers <= 0 || 
+                numCorrect <= 0 || 
+                numSimulations <= 0 ||
+                minToPass > numQuestions) {
+                alert(translations[currentLanguage].invalid_input);
+                return;
+            }
+            
+            simulationResults = [];
+            const progressBar = document.getElementById('progress');
+            
+            // Run simulations with progress updates
+            for (let i = 0; i < numSimulations; i++) {
+                simulationResults.push(simulateTest(numQuestions, numAnswers, numCorrect));
+                
+                // Update progress bar every 10 simulations or at the end
+                if (i % 10 === 0 || i === numSimulations - 1) {
+                    const progress = ((i + 1) / numSimulations) * 100;
+                    progressBar.style.width = `${progress}%`;
+                    // Allow UI to update
+                    await new Promise(resolve => setTimeout(resolve, 0));
+                }
+            }
+            
+            // Calculate statistics
+            const avg = simulationResults.reduce((a, b) => a + b, 0) / simulationResults.length;
+            const med = median(simulationResults);
+            const passingResults = simulationResults.filter(x => x >= minToPass).length;
+            const passChance = (passingResults / simulationResults.length) * 100;
+            
+            // Update statistics display
+            document.getElementById('avg-label').textContent = 
+                `${translations[currentLanguage].average} ${avg.toFixed(2)}`;
+            document.getElementById('median-label').textContent = 
+                `${translations[currentLanguage].median} ${med.toFixed(2)}`;
+            document.getElementById('pass-chance-label').textContent = 
+                `${translations[currentLanguage].pass_chance} ${passChance.toFixed(1)}%`;
+            
+            // Create/update chart
+            updateChart(simulationResults, minToPass);
+        }
+
+        // Update or create chart
+        function updateChart(results, minToPass) {
+            const ctx = document.getElementById('resultsChart').getContext('2d');
+            
+            // Destroy previous chart if it exists
+            if (chart) {
+                chart.destroy();
+            }
+            
+            // Create labels (1 to n)
+            const labels = Array.from({length: results.length}, (_, i) => i + 1);
+            
+            // Create chart
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: translations[currentLanguage].plot_y_label,
+                        data: results,
+                        borderColor: '#4CAF50',
+                        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#4CAF50',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: translations[currentLanguage].plot_title,
+                            color: 'white',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            labels: {
+                                color: 'white'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: translations[currentLanguage].plot_x_label,
+                                color: 'white'
+                            },
+                            ticks: {
+                                color: 'white'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: translations[currentLanguage].plot_y_label,
+                                color: 'white'
+                            },
+                            ticks: {
+                                color: 'white'
+                            },
+                            grid: {
+                                color: 'rgba(255, 255, 255, 0.1)'
+                            }
+                        }
+                    },
+                    annotation: {
+                        annotations: [{
+                            type: 'line',
+                            mode: 'horizontal',
+                            scaleID: 'y',
+                            value: minToPass,
+                            borderColor: 'rgba(255, 99, 132, 0.5)',
+                            borderWidth: 2,
+                            borderDash: [6, 6],
+                            label: {
+                                enabled: true,
+                                content: translations[currentLanguage].min_to_pass
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        // Clear all function
+        function clearAll() {
+            document.getElementById('num-questions').value = 10;
+            document.getElementById('num-answers').value = 4;
+            document.getElementById('num-correct').value = 1;
+            document.getElementById('num-simulations').value = 100;
+            document.getElementById('min-to-pass').value = 6;
+            
+            document.getElementById('progress').style.width = '0%';
+            updateStatLabels();
+            
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
+            
+            simulationResults = [];
+        }
+
+        // Save plot function
+        function savePlot() {
+            if (!chart) {
+                alert(translations[currentLanguage].run_first);
+                return;
+            }
+            
+            const canvas = document.getElementById('resultsChart');
+            const dataUrl = canvas.toDataURL('image/png');
+            
+            const link = document.createElement('a');
+            link.download = 'simulation_results.png';
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert(translations[currentLanguage].plot_saved);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            changeLanguage('PL');
+        });
+    </script>
+</body>
+</html>
